@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <nav>
+        <ul>
+            <li><a href="/myBlog">My blogs</a></li>
+            <li><a href="/addBlog">Add blogs</a></li>
+            <li><a href="/logout">Logout</li>
+        </ul>
+    </nav>
+    <h1>Welcome to home page {{user.username}}</h1>
+    {{#each blogs as |blog|}}
+    {{#if blog.isApproved}}
+    <div>
+        <h1>{{blog.title}}</h1>
+        <p>{{blog.content}}</p>
+    </div>
+    {{/if}}
+    {{/each}}
+    
+</body>
+</html>

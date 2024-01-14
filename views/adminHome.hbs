@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Home</title>
+</head>
+<body>
+    <nav>
+        <ul>
+            <li><a href="/logout">Logout</a></li>
+        </ul>
+    </nav>
+    <h1>Welcome Admin</h1>
+    <h3>Manage Blogs:</h3>
+    {{#each blogs}}
+  {{#unless this.isApproved}}
+    {{this.title}}
+    <div>        
+      <form action="/approval" method="post">
+        <input type="hidden" name="blogId" value="{{this._id}}">
+        <button type="submit" name="approve" class="approve-btn">Approve</button>
+        <button type="submit" name="reject" class="reject-btn">Reject</button>
+      </form>
+    </div>
+  {{/unless}}
+{{/each}}
+</body>
+</html>
