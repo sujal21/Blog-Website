@@ -1,6 +1,6 @@
 const express = require("express");
 const app = express();
-const path = require("path");
+// const path = require("path");
 
 const mongoose = require("mongoose");
 const User = require("./model/User.js");
@@ -61,12 +61,24 @@ async function checkIsAdmin(req, res, next) {
   const { username, email, password } = req.body;
   if (
     username == "admin" &&
-    email == "admin@gmail.com" &&
-    password == "admin"
+    email == "sujalgupta1905@gmail.com" &&
+    password == "admin123"
   ) {
-    await User.updateOne({ username: "admin" }, { $set: { isAdmin: true } });
-    isAdmin = true;
-    console.log("User updated successfully");
+    try {
+      const hashAdminPass = await bcrypt.hash(password, 10); // Await the hash function
+      const adminUser = new User({
+        username: username,
+        email: email,
+        password: hashAdminPass,
+      });
+      await adminUser.save();
+      await User.updateOne({ username: "admin" }, { $set: { isAdmin: true } });
+      isAdmin = true;
+
+      console.log("Admin logged in successfully");
+    } catch (error) {
+      console.error("Error hashing admin password:", error);
+    }
   }
   req.isAdmin = isAdmin; // Store the value in req object for later use
   next();
@@ -80,7 +92,7 @@ app.get("/", async (req, res) => {
     });
   } catch (error) {
     console.error("Error fetching blogs:", error);
-    res.status(500).send("Internal Server Error");
+    res.send("Internal Server Error");
   }
 });
 
@@ -134,7 +146,7 @@ app.post("/register", checkIsAdmin, async (req, res) => {
       }
     } catch (error) {
       console.error("Error during registration:", error);
-      res.status(500).send("Internal Server Error");
+      res.send("Internal Server Error");
     }
   }
 });
@@ -144,7 +156,7 @@ app.get("/verify", async (req, res) => {
   const token = req.query.token;
 
   if (!token) {
-    return res.status(400).send("Invalid verification link");
+    return res.send("Invalid verification link");
   }
 
   try {
@@ -159,11 +171,11 @@ app.get("/verify", async (req, res) => {
       // Redirect to a success page or send a success message
       return res.send("User registered successfully, please login now");
     } else {
-      return res.status(404).send("User not found");
+      return res.send("User not found");
     }
   } catch (error) {
     console.error("Error during verification:", error);
-    return res.status(500).send("Internal Server Error");
+    return res.send("Internal Server Error");
   }
 });
 
@@ -228,12 +240,8 @@ app.get("/logout", async (req, res) => {
     }
   } catch (error) {
     console.error("Error during logout:", error);
-    res.status(500).send("Internal Server Error");
+    res.send("Internal Server Error");
   }
-});
-
-app.get("/addBlog", (req, res) => {
-  res.render("addBlog");
 });
 
 app.get("/addBlog", (req, res) => {
@@ -276,7 +284,7 @@ app.get("/myBlog", async (req, res) => {
       });
     } catch (error) {
       console.error("Error fetching user blogs:", error);
-      res.status(500).send("Internal Server Error");
+      res.send("Internal Server Error");
     }
   } else {
     res.redirect("/login"); // Redirect to login if user is not logged in
@@ -312,7 +320,7 @@ app.get("/adminHome", async (req, res) => {
     res.render("adminHome", { blogs: blogs });
   } catch (error) {
     console.error("Error fetching blogs:", error);
-    res.status(500).send("Internal Server Error");
+    res.send("Internal Server Error");
   }
 });
 
@@ -329,7 +337,7 @@ app.get("/userHome", async (req, res) => {
       });
     } catch (error) {
       console.error("Error fetching user blogs:", error);
-      res.status(500).send("Internal Server Error");
+      res.send("Internal Server Error");
     }
   } else {
     res.redirect("/login"); // Redirect to login if the user is not logged in
