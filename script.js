@@ -8,6 +8,7 @@ const Blog = require("./model/Blog.js");
 const session = require("express-session");
 const nodemailer = require("nodemailer");
 const exphbs = require("express-handlebars");
+const bcrypt = require("bcrypt");
 
 app.engine(
   "hbs",
@@ -102,10 +103,13 @@ app.post("/register", checkIsAdmin, async (req, res) => {
     // Generate a verification token
     const verificationToken = generateVerificationToken();
 
+    // Hash the password using bcrypt
+    const hashedPassword = await bcrypt.hash(password, 10);
+
     const newUser = new User({
       username: username,
       email: email,
-      password: password,
+      password: hashedPassword,
       verificationToken: verificationToken,
     });
 
@@ -176,20 +180,26 @@ app.post("/login", checkIsAdmin, async (req, res) => {
     let user = await User.findOne({
       username: username,
       email: email,
-      password: password,
     });
 
     if (user) {
-      req.session.isLoggedIn = true;
-      req.session.user = user;
-      const users = await User.findById({ _id: req.session.user._id }).populate(
-        "blog"
-      );
-      const userName = await User.findOne({ username: req.body.username });
-      res.render("userHome", {
-        user: userName,
-        blogs: users.blog,
-      });
+      // Compare the provided password with the hashed password in the database
+      const isPasswordMatch = await bcrypt.compare(password, user.password);
+
+      if (isPasswordMatch) {
+        req.session.isLoggedIn = true;
+        req.session.user = user;
+        const users = await User.findById({
+          _id: req.session.user._id,
+        }).populate("blog");
+        const userName = await User.findOne({ username: req.body.username });
+        res.render("userHome", {
+          user: userName,
+          blogs: users.blog,
+        });
+      } else {
+        res.send("Incorrect password");
+      }
     } else {
       res.send("User not found");
     }
